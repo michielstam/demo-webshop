@@ -37,11 +37,17 @@ function renderBasket() {
     if (cartButtonsRow) cartButtonsRow.style.display = "none";
     return;
   }
-  basket.forEach((product) => {
-    const item = PRODUCTS[product];
+  // Group identical products and count quantities
+  const productCounts = basket.reduce((counts, product) => {
+    counts[product] = (counts[product] || 0) + 1;
+    return counts;
+  }, {});
+  // Render grouped items with quantities
+  Object.entries(productCounts).forEach(([productId, quantity]) => {
+    const item = PRODUCTS[productId];
     if (item) {
       const li = document.createElement("li");
-      li.innerHTML = `<span class='basket-emoji'>${item.emoji}</span> <span>${item.name}</span>`;
+      li.innerHTML = `<span class='basket-emoji'>${item.emoji}</span> <span>${quantity}x ${item.name}</span>`;
       basketList.appendChild(li);
     }
   });
