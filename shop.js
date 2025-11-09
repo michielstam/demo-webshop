@@ -2,6 +2,7 @@ const PRODUCTS = {
   apple: { name: "Apple", emoji: "🍏" },
   banana: { name: "Banana", emoji: "🍌" },
   lemon: { name: "Lemon", emoji: "🍋" },
+  strawberry: { name: "Strawberry", emoji: "🍓" },
 };
 
 function getBasket() {
@@ -18,8 +19,60 @@ function getBasket() {
 
 function addToBasket(product) {
   const basket = getBasket();
+  
+  // Check for banana/strawberry incompatibility
+  if (product === "banana" && basket.includes("strawberry")) {
+    showErrorMessage("Strawberries and bananas cannot be combined.");
+    return false;
+  }
+  if (product === "strawberry" && basket.includes("banana")) {
+    showErrorMessage("Strawberries and bananas cannot be combined.");
+    return false;
+  }
+  
   basket.push(product);
   localStorage.setItem("basket", JSON.stringify(basket));
+  return true;
+}
+
+function showErrorMessage(message) {
+  // Try to find existing error message element
+  let errorMsg = document.getElementById("errorMessage");
+  if (!errorMsg) {
+    // Create error message element
+    errorMsg = document.createElement("div");
+    errorMsg.id = "errorMessage";
+    errorMsg.className = "error-message";
+    errorMsg.setAttribute("role", "alert");
+    errorMsg.setAttribute("aria-live", "polite");
+    
+    // Insert after button-container or append to content-box
+    const buttonContainer = document.querySelector(".button-container");
+    const contentBox = document.querySelector(".content-box");
+    if (buttonContainer && buttonContainer.parentNode) {
+      // Insert after button-container within its parent
+      if (buttonContainer.nextSibling) {
+        buttonContainer.parentNode.insertBefore(errorMsg, buttonContainer.nextSibling);
+      } else {
+        buttonContainer.parentNode.appendChild(errorMsg);
+      }
+    } else if (contentBox) {
+      contentBox.appendChild(errorMsg);
+    } else {
+      // Fallback: append to body
+      document.body.appendChild(errorMsg);
+    }
+  }
+  
+  errorMsg.textContent = message;
+  errorMsg.style.display = "block";
+  
+  // Auto-hide after 5 seconds
+  setTimeout(() => {
+    if (errorMsg) {
+      errorMsg.style.display = "none";
+    }
+  }, 5000);
 }
 
 function clearBasket() {
@@ -76,8 +129,10 @@ if (document.readyState !== "loading") {
 // Patch basket functions to update indicator
 const origAddToBasket = window.addToBasket;
 window.addToBasket = function (product) {
-  origAddToBasket(product);
-  renderBasketIndicator();
+  const success = origAddToBasket(product);
+  if (success) {
+    renderBasketIndicator();
+  }
 };
 const origClearBasket = window.clearBasket;
 window.clearBasket = function () {
